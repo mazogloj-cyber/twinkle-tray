@@ -18,6 +18,7 @@ import MonitorInfo from "./MonitorInfo"
 import MonitorFeatures from "./MonitorFeatures"
 import { SettingsOption, SettingsChild } from "./SettingsOption";
 import SafeRender from "./SafeRender";
+import TimeScheduleGraph from "./TimeScheduleGraph";
 
 import DefaultIcon from "../assets/tray-icons/dark/icon@4x.png"
 import MDL2Icon from "../assets/tray-icons/dark/mdl2@4x.png"
@@ -144,7 +145,8 @@ export default class SettingsWindow extends PureComponent {
             showAddFeatureOverlay: false,
             addFeatureMonitor: "",
             addFeatureValue: "",
-            addFeatureError: false
+            addFeatureError: false,
+            showTimeGraph: false
         }
         this.numMonitors = 0
         this.downKeys = {}
@@ -1269,9 +1271,30 @@ export default class SettingsWindow extends PureComponent {
                                 <div className="pageSection">
                                     <div className="sectionTitle">{T.t("SETTINGS_TIME_TITLE")}</div>
                                     <p>{T.t("SETTINGS_TIME_DESC")}</p>
-                                    <div className="adjustmentTimes">
-                                        {this.getAdjustmentTimes()}
-                                    </div>
+
+                                    <SettingsOption title="Use Graph Interface" input={
+                                        <div className="inputToggle-generic">
+                                            <input onChange={(e) => this.setState({ showTimeGraph: e.target.checked })} checked={this.state.showTimeGraph} type="checkbox" />
+                                            <div className="text">{this.state.showTimeGraph ? T.t("GENERIC_ON") : T.t("GENERIC_OFF")}</div>
+                                        </div>
+                                    } />
+
+                                    {this.state.showTimeGraph ? (
+                                        <TimeScheduleGraph 
+                                            adjustmentTimes={this.state.adjustmentTimes}
+                                            lat={window.settings.adjustmentTimeLatitude}
+                                            long={window.settings.adjustmentTimeLongitude}
+                                            onUpdate={(newTimes) => {
+                                                this.setState({ adjustmentTimes: newTimes });
+                                                this.sendSettingsThrottle({ adjustmentTimes: newTimes })
+                                            }}
+                                        />
+                                    ) : (
+                                        <div className="adjustmentTimes">
+                                            {this.getAdjustmentTimes()}
+                                        </div>
+                                    )}
+
                                     <p><a className="button" onClick={this.addAdjustmentTime}>+ {T.t("SETTINGS_TIME_ADD")}</a></p>
                                 </div>
                                 <div className="pageSection">

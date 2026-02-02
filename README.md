@@ -8,7 +8,7 @@
 Twinkle Tray enables brightness control on external displays in Windows 10 & 11. Even though Windows is capable of adjusting the backlight on most monitors, it doesn't support external monitors natively. Windows also lacks any options to manage the brightness of multiple displays. This app inserts a new icon into your system tray, where you can click to have instant access to the brightness levels of all compatible displays. 
 
 <img src="https://raw.githubusercontent.com/xanderfrangos/twinkle-tray/gh-pages/assets/img/tt-screenshot-w11.jpg" alt="Win 10 brightness slider" />
-
+   
 ## Features
 - Adds brightness sliders to the system tray, similar to the built-in Windows volume flyout.
 - Seamlessly blends in with Windows 10 and Windows 11. Uses your Personalization settings to match your taskbar.

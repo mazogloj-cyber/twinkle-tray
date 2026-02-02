@@ -1,6 +1,6 @@
 {
   "name": "twinkle-tray",
-  "version": "1.17.2",
+  "version": "1.17.3",
   "description": "Manage the brightness of monitors from your system tray",
   "main": "src/electron.js",
   "scripts": {
@@ -193,7 +193,7 @@
     "node-gyp": "$node-gyp",
     "bindings@<1.5.0": "1.5.0",
     "node-addon-api@<8.2.2": "8.2.2",
-    "node-active-window": {
+    "@paymoapp/active-window": {
       "node-gyp": "$node-gyp",
       "bindings": "$bindings",
       "node-addon-api": "$node-addon-api"

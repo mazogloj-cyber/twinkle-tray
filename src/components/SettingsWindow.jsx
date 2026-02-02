@@ -1055,7 +1055,7 @@ export default class SettingsWindow extends PureComponent {
         const updateInterval = (settings.updateInterval || 500) * 1
         const remaps = (settings.remaps || {})
         const names = (settings.names || {})
-        const adjustmentTimes = (settings.adjustmentTimes || {})
+        const adjustmentTimes = (settings.adjustmentTimes || [])
         const killWhenIdle = (settings.killWhenIdle || false)
         const order = (settings.order || [])
         const checkTimeAtStartup = (settings.checkTimeAtStartup || false)
@@ -1067,6 +1067,7 @@ export default class SettingsWindow extends PureComponent {
         const analytics = settings.analytics
         const useAcrylic = settings.useAcrylic
         const scrollShortcut = settings.scrollShortcut
+        const showTimeGraph = (settings.showTimeGraph || false)
         this.setState({
             rawSettings: (Object.keys(settings).length > 0 ? settings : this.state.rawSettings),
             openAtLogin,
@@ -1086,7 +1087,8 @@ export default class SettingsWindow extends PureComponent {
             hotkeyPercent,
             analytics,
             useAcrylic,
-            scrollShortcut
+            scrollShortcut,
+            showTimeGraph
         }, () => {
             this.forceUpdate()
         })
@@ -1272,9 +1274,9 @@ export default class SettingsWindow extends PureComponent {
                                     <div className="sectionTitle">{T.t("SETTINGS_TIME_TITLE")}</div>
                                     <p>{T.t("SETTINGS_TIME_DESC")}</p>
 
-                                    <SettingsOption title="Use Graph Interface" input={
+                                    <SettingsOption title={T.t("SETTINGS_TIME_USE_GRAPH")} input={
                                         <div className="inputToggle-generic">
-                                            <input onChange={(e) => this.setState({ showTimeGraph: e.target.checked })} checked={this.state.showTimeGraph} type="checkbox" />
+                                            <input onChange={(e) => this.setSetting("showTimeGraph", e.target.checked)} checked={this.state.showTimeGraph} data-checked={this.state.showTimeGraph} type="checkbox" />
                                             <div className="text">{this.state.showTimeGraph ? T.t("GENERIC_ON") : T.t("GENERIC_OFF")}</div>
                                         </div>
                                     } />

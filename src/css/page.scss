@@ -1128,3 +1128,27 @@ body[data-is-win11="true"] {
 .try-catch-failure {
     user-select: auto;
 }
+.time-schedule-graph {
+    padding: 10px 0;
+    user-select: none;
+
+    svg {
+        width: 100%;
+        height: 200px;
+        background: rgba(0, 0, 0, 0.05);
+        border-radius: 6px;
+        overflow: visible;
+
+        text {
+            font-family: 'Segoe UI', sans-serif;
+            fill: var(--page-text-mid);
+            font-size: 11px;
+        }
+
+        line {
+            stroke: var(--page-text-mid);
+            stroke-opacity: 0.1;
+        }
+    }
+}
+

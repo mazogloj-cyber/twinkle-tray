@@ -1,5 +1,18 @@
 import React, { PureComponent } from "react";
 
+function throttle(func, limit) {
+    let inThrottle;
+    return function() {
+        const args = arguments;
+        const context = this;
+        if (!inThrottle) {
+            func.apply(context, args);
+            inThrottle = true;
+            setTimeout(() => inThrottle = false, limit);
+        }
+    }
+}
+
 const getMinutes = (timeStr) => {
     if(!timeStr) return 0;
     
@@ -29,9 +42,36 @@ export default class TimeScheduleGraph extends PureComponent {
         super(props);
         this.state = {
             draggingIndex: -1,
-            hoverIndex: -1
+            hoverIndex: -1,
+            currentTime: this.getCurrentTimeMinutes(),
+            isPlaying: false,
+            playTime: 0,
+            draggingData: null
         };
         this.svgRef = React.createRef();
+        this.animationFrame = null;
+        
+        this.throttledPreview = throttle((brightness) => {
+            if(this.props.onPreviewBrightness) {
+                this.props.onPreviewBrightness(brightness);
+            }
+       }, 50);
+    }
+
+    componentDidMount() {
+        this.interval = setInterval(() => {
+            this.setState({ currentTime: this.getCurrentTimeMinutes() });
+        }, 60000);
+    }
+
+    componentWillUnmount() {
+        clearInterval(this.interval);
+        if (this.animationFrame) cancelAnimationFrame(this.animationFrame);
+    }
+
+    getCurrentTimeMinutes() {
+        const now = new Date();
+        return now.getHours() * 60 + now.getMinutes();
     }
 
     getPoints() {
@@ -61,9 +101,89 @@ export default class TimeScheduleGraph extends PureComponent {
         }).sort((a, b) => a.x - b.x);
     }
 
+    getDisplayPoints() {
+        const points = this.getPoints();
+        if (points.length === 0) return [];
+        
+        const first = points[0];
+        const last = points[points.length - 1];
+        
+        const totalDuration = (1440 - last.x) + first.x;
+        const wrapSlope = (first.y - last.y) / totalDuration;
+        
+        const yAt0 = last.y + wrapSlope * (1440 - last.x);
+        
+        const displayPoints = [
+            { x: 0, y: yAt0, virtual: true },
+            ...points,
+            { x: 1440, y: yAt0, virtual: true }
+        ];
+        return displayPoints;
+    }
+
+    getBrightnessAt(minutes) {
+        const displayPoints = this.getDisplayPoints();
+        if (displayPoints.length === 0) return 50;
+
+        for(let i=0; i < displayPoints.length - 1; i++) {
+            const p1 = displayPoints[i];
+            const p2 = displayPoints[i+1];
+            if (minutes >= p1.x && minutes <= p2.x) {
+                const ratio = (minutes - p1.x) / (p2.x - p1.x);
+                return p1.y + (p2.y - p1.y) * ratio;
+            }
+        }
+        return displayPoints[0].y;
+    }
+
+    togglePlay = () => {
+        if(this.state.isPlaying) {
+             this.stopPlay();
+        } else {
+             this.startPlay();
+        }
+    }
+    
+    startPlay = () => {
+        if(this.props.onPreviewStart) this.props.onPreviewStart();
+        this.setState({ isPlaying: true, playTime: 0 });
+        this.lastFrameTime = performance.now();
+        this.animationFrame = requestAnimationFrame(this.playLoop);
+    }
+    
+    stopPlay = () => {
+        this.setState({ isPlaying: false, playTime: 0 });
+        if(this.props.onPreviewEnd) this.props.onPreviewEnd();
+        if (this.animationFrame) cancelAnimationFrame(this.animationFrame);
+    }
+    
+    playLoop = (timestamp) => {
+        if(!this.state.isPlaying) return;
+        
+        const elapsed = timestamp - this.lastFrameTime;
+        // Speed: 24h in 5 seconds = 1440 min / 5000 ms
+        const speed = 1440 / 5000; 
+        
+        let newTime = this.state.playTime + (elapsed * speed);
+        
+        if (newTime >= 1440) {
+            this.stopPlay();
+            return; 
+        }
+        
+        this.lastFrameTime = timestamp;
+        this.setState({ playTime: newTime });
+        
+        const brightness = this.getBrightnessAt(newTime);
+        this.throttledPreview(brightness);
+        
+        this.animationFrame = requestAnimationFrame(this.playLoop);
+    }
+
     handleMouseDown = (index, e) => {
         e.preventDefault();
         this.setState({ draggingIndex: index });
+        if(this.props.onPreviewStart) this.props.onPreviewStart();
         document.addEventListener("mousemove", this.handleMouseMove);
         document.addEventListener("mouseup", this.handleMouseUp);
     };
@@ -88,11 +208,17 @@ export default class TimeScheduleGraph extends PureComponent {
         if (brightness < 0) brightness = 0;
         if (brightness > 100) brightness = 100;
 
+        this.setState({ 
+            draggingData: { x: minutes, y: brightness } 
+        });
+        
+        this.throttledPreview(brightness);
         this.updatePoint(this.state.draggingIndex, minutes, brightness);
     };
 
     handleMouseUp = () => {
-        this.setState({ draggingIndex: -1 });
+        this.setState({ draggingIndex: -1, draggingData: null });
+        if(this.props.onPreviewEnd) this.props.onPreviewEnd();
         document.removeEventListener("mousemove", this.handleMouseMove);
         document.removeEventListener("mouseup", this.handleMouseUp);
     };
@@ -154,33 +280,12 @@ export default class TimeScheduleGraph extends PureComponent {
 
     render() {
         const points = this.getPoints();
+        const displayPoints = this.getDisplayPoints();
         const width = 1000; // SVG internal coordinate space
         const height = 200;
         
         // Construct path
-        
         let pathD = "";
-        
-        // Let's create a display list that includes 0 and width.
-        const displayPoints = [];
-        
-        if (points.length > 0) {
-            const first = points[0];
-            const last = points[points.length - 1];
-            
-            // Calculate value at 00:00
-            // We need the LAST point of the day to determine the start at 00:00
-            // The cycle is circular.
-            
-            const totalDuration = (1440 - last.x) + first.x;
-            const wrapSlope = (first.y - last.y) / totalDuration;
-            
-            const yAt0 = last.y + wrapSlope * (1440 - last.x);
-            
-            displayPoints.push({ x: 0, y: yAt0, virtual: true });
-            points.forEach(p => displayPoints.push(p));
-            displayPoints.push({ x: 1440, y: yAt0, virtual: true });
-        }
         
         // Generate Path
         if (displayPoints.length > 0) {
@@ -198,7 +303,14 @@ export default class TimeScheduleGraph extends PureComponent {
         }
 
         return (
-            <div className="time-schedule-graph">
+            <div className="time-schedule-graph" style={{position: 'relative'}}>
+                <a 
+                    style={{ position: 'absolute', top: 0, right: 0, zIndex: 10, cursor: "pointer" }} 
+                    className="button"
+                    onClick={this.togglePlay}
+                >
+                    {this.state.isPlaying ? "Stop Test" : "Test Schedule"}
+                </a>
                 <svg 
                     ref={this.svgRef}
                     viewBox={`0 0 ${width} ${height}`} 
@@ -219,6 +331,27 @@ export default class TimeScheduleGraph extends PureComponent {
                     {/* Line */}
                     <path d={pathD} fill="none" stroke="var(--system-accent-color)" strokeWidth="2" style={{ pointerEvents: "none" }} />
 
+                    {/* Current Time Indicator */}
+                    <line 
+                        x1={this.state.currentTime / 1440 * width} y1={0} 
+                        x2={this.state.currentTime / 1440 * width} y2={height} 
+                        stroke="var(--text-color)" 
+                        strokeWidth="2" 
+                        strokeDasharray="5,5" 
+                        style={{ pointerEvents: "none", opacity: 0.5 }} 
+                    />
+
+                    {/* Play Cursor */}
+                    {this.state.isPlaying && (
+                        <line 
+                            x1={this.state.playTime / 1440 * width} y1={0} 
+                            x2={this.state.playTime / 1440 * width} y2={height} 
+                            stroke="var(--system-accent-color)" 
+                            strokeWidth="2" 
+                            style={{ pointerEvents: "none" }} 
+                        />
+                    )}
+
                     {/* Points */}
                     {points.map((p, i) => (
                         <circle 
@@ -237,6 +370,16 @@ export default class TimeScheduleGraph extends PureComponent {
                         />
                     ))}
                     
+                    {/* Tooltip */}
+                    {this.state.draggingData && (
+                        <g transform={`translate(${this.state.draggingData.x / 1440 * width}, ${(100 - this.state.draggingData.y) / 100 * height})`}>
+                            <rect x="-40" y="-35" width="80" height="25" fill="var(--page-background)" stroke="var(--system-accent-color)" rx="4" />
+                            <text x="0" y="-18" textAnchor="middle" fill="var(--text-color)" fontSize="14" dy=".3em">
+                                {getTimeStr(this.state.draggingData.x)} • {Math.round(this.state.draggingData.y)}%
+                            </text>
+                        </g>
+                    )}
+
                     {/* X Axis Labels */}
                     <text x={0} y={height + 15} textAnchor="start">00:00</text>
                     <text x={width/4} y={height + 15} textAnchor="middle">06:00</text>

@@ -206,7 +206,42 @@ export default class SettingsWindow extends PureComponent {
         window.reactReady = true
     }
 
+    handlePreviewStart = () => {
+        this.prePreviewBrightness = {};
+        const { monitors } = this.state;
+        if(monitors) {
+            Object.values(monitors).forEach(m => {
+                 this.prePreviewBrightness[m.id] = m.brightness;
+            });
+        }
+    }
 
+    handlePreviewBrightness = (brightness) => {
+        const { monitors } = this.state;
+        if(monitors) {
+             Object.values(monitors).forEach(m => {
+                 window.ipc.send('update-brightness', {
+                     index: m.id,
+                     level: Math.round(brightness)
+                 });
+             });
+        }
+    }
+    
+    handlePreviewEnd = () => {
+        const { monitors } = this.state;
+        if(this.prePreviewBrightness && monitors) {
+             Object.values(monitors).forEach(m => {
+                 if(this.prePreviewBrightness[m.id] !== undefined) {
+                     window.ipc.send('update-brightness', {
+                         index: m.id,
+                         level: this.prePreviewBrightness[m.id]
+                     });
+                 }
+             });
+        }
+        this.prePreviewBrightness = null;
+    }
 
     onDragEnd(result) {
         // dropped outside the list
@@ -1290,6 +1325,9 @@ export default class SettingsWindow extends PureComponent {
                                                 this.setState({ adjustmentTimes: newTimes });
                                                 this.sendSettingsThrottle({ adjustmentTimes: newTimes })
                                             }}
+                                            onPreviewStart={this.handlePreviewStart}
+                                            onPreviewBrightness={this.handlePreviewBrightness}
+                                            onPreviewEnd={this.handlePreviewEnd}
                                         />
                                     ) : (
                                         <div className="adjustmentTimes">

@@ -1321,6 +1321,7 @@ export default class SettingsWindow extends PureComponent {
                                             adjustmentTimes={this.state.adjustmentTimes}
                                             lat={window.settings.adjustmentTimeLatitude}
                                             long={window.settings.adjustmentTimeLongitude}
+                                            locale={this.state.language}
                                             onUpdate={(newTimes) => {
                                                 this.setState({ adjustmentTimes: newTimes });
                                                 this.sendSettingsThrottle({ adjustmentTimes: newTimes })

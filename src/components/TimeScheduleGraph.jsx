@@ -37,6 +37,24 @@ const getTimeStr = (minutes) => {
     return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`;
 };
 
+const formatDisplayTime = (minutes, locale) => {
+    let loc = locale;
+    if (!loc || loc === "system") loc = undefined;
+
+    let h = Math.floor(minutes / 60);
+    let m = Math.floor(minutes % 60);
+    
+    const date = new Date();
+    date.setHours(h);
+    date.setMinutes(m);
+    
+    try {
+        return new Intl.DateTimeFormat(loc, { hour: 'numeric', minute: 'numeric' }).format(date);
+    } catch (e) {
+        return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`;
+    }
+};
+
 export default class TimeScheduleGraph extends PureComponent {
     constructor(props) {
         super(props);
@@ -375,17 +393,17 @@ export default class TimeScheduleGraph extends PureComponent {
                         <g transform={`translate(${this.state.draggingData.x / 1440 * width}, ${(100 - this.state.draggingData.y) / 100 * height})`}>
                             <rect x="-40" y="-35" width="80" height="25" fill="var(--page-background)" stroke="var(--system-accent-color)" rx="4" />
                             <text x="0" y="-18" textAnchor="middle" fill="var(--text-color)" fontSize="14" dy=".3em">
-                                {getTimeStr(this.state.draggingData.x)} • {Math.round(this.state.draggingData.y)}%
+                                {formatDisplayTime(this.state.draggingData.x, this.props.locale)} • {Math.round(this.state.draggingData.y)}%
                             </text>
                         </g>
                     )}
 
                     {/* X Axis Labels */}
-                    <text x={0} y={height + 15} textAnchor="start">00:00</text>
-                    <text x={width/4} y={height + 15} textAnchor="middle">06:00</text>
-                    <text x={width/2} y={height + 15} textAnchor="middle">12:00</text>
-                    <text x={width*0.75} y={height + 15} textAnchor="middle">18:00</text>
-                    <text x={width} y={height + 15} textAnchor="end">24:00</text>
+                    <text x={0} y={height + 15} textAnchor="start">{formatDisplayTime(0, this.props.locale)}</text>
+                    <text x={width/4} y={height + 15} textAnchor="middle">{formatDisplayTime(360, this.props.locale)}</text>
+                    <text x={width/2} y={height + 15} textAnchor="middle">{formatDisplayTime(720, this.props.locale)}</text>
+                    <text x={width*0.75} y={height + 15} textAnchor="middle">{formatDisplayTime(1080, this.props.locale)}</text>
+                    <text x={width} y={height + 15} textAnchor="end">{formatDisplayTime(0, this.props.locale)}</text>
                 </svg>
             </div>
         );

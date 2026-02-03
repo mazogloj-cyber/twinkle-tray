@@ -651,6 +651,13 @@ export default class SettingsWindow extends PureComponent {
         this.forceUpdate()
     }
 
+    getTimeInputLang = () => {
+        const { timeFormat } = this.state;
+        if (timeFormat === "12h") return "en-US";
+        if (timeFormat === "24h") return "en-GB";
+        return undefined;
+    }
+
     getAdjustmentTimes = () => {
         if (this.state.adjustmentTimes == undefined || this.state.adjustmentTimes.length == 0) {
             return (<div></div>)
@@ -662,7 +669,7 @@ export default class SettingsWindow extends PureComponent {
 
             return this.state.adjustmentTimes.map((time, index) => {
                 let timeElem = (
-                    <input type="time" min="00:00" max="23:59" onChange={(e) => {
+                    <input type="time" lang={this.getTimeInputLang()} min="00:00" max="23:59" onChange={(e) => {
                         this.setAdjustmentTimeValue(index, e.target.value)
                     }} value={time.time}></input>
                 )
@@ -672,14 +679,14 @@ export default class SettingsWindow extends PureComponent {
                             time.sunCalc = e.target.value
                             this.updateAdjustmentTime(time, index)
                         }}>
-                            <option value="dawn">Dawn ({times.dawn})</option>
-                            <option value="sunrise">Sunrise ({times.sunrise})</option>
-                            <option value="solarNoon">Solar Noon ({times.solarNoon})</option>
-                            <option value="goldenHour">Golden Hour ({times.goldenHour})</option>
-                            <option value="sunsetStart">Sunset Start ({times.sunsetStart})</option>
-                            <option value="sunset">Sunset ({times.sunset})</option>
-                            <option value="dusk">Dusk ({times.dusk})</option>
-                            <option value="night">Night ({times.night})</option>
+                            <option value="dawn">{T.t("SETTINGS_TIME_SUN_DAWN")} ({times.dawn})</option>
+                            <option value="sunrise">{T.t("SETTINGS_TIME_SUN_SUNRISE")} ({times.sunrise})</option>
+                            <option value="solarNoon">{T.t("SETTINGS_TIME_SUN_SOLARNOON")} ({times.solarNoon})</option>
+                            <option value="goldenHour">{T.t("SETTINGS_TIME_SUN_GOLDENHOUR")} ({times.goldenHour})</option>
+                            <option value="sunsetStart">{T.t("SETTINGS_TIME_SUN_SUNSETSTART")} ({times.sunsetStart})</option>
+                            <option value="sunset">{T.t("SETTINGS_TIME_SUN_SUNSET")} ({times.sunset})</option>
+                            <option value="dusk">{T.t("SETTINGS_TIME_SUN_DUSK")} ({times.dusk})</option>
+                            <option value="night">{T.t("SETTINGS_TIME_SUN_NIGHT")} ({times.night})</option>
                         </select>
                     )
                 }

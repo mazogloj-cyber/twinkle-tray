@@ -361,10 +361,9 @@ export default class TimeScheduleGraph extends PureComponent {
                     <line 
                         x1={this.state.currentTime / 1440 * width} y1={0} 
                         x2={this.state.currentTime / 1440 * width} y2={height} 
-                        stroke="var(--system-accent-color)" 
                         strokeWidth="2" 
                         strokeDasharray="5,5" 
-                        style={{ pointerEvents: "none", opacity: 1 }} 
+                        style={{ pointerEvents: "none", stroke: "var(--system-accent-color)", strokeOpacity: 1, opacity: 1 }} 
                     />
 
                     {/* Play Cursor */}

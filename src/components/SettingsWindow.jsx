@@ -146,7 +146,8 @@ export default class SettingsWindow extends PureComponent {
             addFeatureMonitor: "",
             addFeatureValue: "",
             addFeatureError: false,
-            showTimeGraph: false
+            showTimeGraph: false,
+            timeFormat: "system"
         }
         this.numMonitors = 0
         this.downKeys = {}
@@ -1103,6 +1104,7 @@ export default class SettingsWindow extends PureComponent {
         const useAcrylic = settings.useAcrylic
         const scrollShortcut = settings.scrollShortcut
         const showTimeGraph = (settings.showTimeGraph || false)
+        const timeFormat = (settings.timeFormat || "system")
         this.setState({
             rawSettings: (Object.keys(settings).length > 0 ? settings : this.state.rawSettings),
             openAtLogin,
@@ -1123,7 +1125,8 @@ export default class SettingsWindow extends PureComponent {
             analytics,
             useAcrylic,
             scrollShortcut,
-            showTimeGraph
+            showTimeGraph,
+            timeFormat
         }, () => {
             this.forceUpdate()
         })
@@ -1316,12 +1319,21 @@ export default class SettingsWindow extends PureComponent {
                                         </div>
                                     } />
 
+                                    <SettingsOption title={T.t("SETTINGS_TIME_FORMAT")} input={
+                                        <select value={this.state.timeFormat} onChange={(e) => this.setSetting("timeFormat", e.target.value)}>
+                                            <option value="system">{T.t("SETTINGS_GENERAL_THEME_SYSTEM")}</option>
+                                            <option value="12h">12h (AM/PM)</option>
+                                            <option value="24h">24h</option>
+                                        </select>
+                                    } />
+
                                     {this.state.showTimeGraph ? (
                                         <TimeScheduleGraph 
                                             adjustmentTimes={this.state.adjustmentTimes}
                                             lat={window.settings.adjustmentTimeLatitude}
                                             long={window.settings.adjustmentTimeLongitude}
                                             locale={this.state.language}
+                                            timeFormat={this.state.timeFormat}
                                             onUpdate={(newTimes) => {
                                                 this.setState({ adjustmentTimes: newTimes });
                                                 this.sendSettingsThrottle({ adjustmentTimes: newTimes })

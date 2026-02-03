@@ -249,5 +249,6 @@
     "SETTINGS_FEATURES_BRIGHTNESS_VCP_DESC": "Оставьте пустым для значения по умолчанию (0x10). Поддерживаемые коды см. в списке ниже.",
     "SETTINGS_TIME_USE_SUN_POSITION": "Использовать положение солнца",
     "SETTINGS_TIME_USE_GRAPH": "Использовать графический интерфейс",
+    "SETTINGS_TIME_FORMAT": "Формат времени",
     "SETTINGS_HOTKEY_ADD_ACTION": "Добавить действие"
 }

@@ -37,7 +37,7 @@ const getTimeStr = (minutes) => {
     return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`;
 };
 
-const formatDisplayTime = (minutes, locale) => {
+const formatDisplayTime = (minutes, locale, timeFormat) => {
     let loc = locale;
     if (!loc || loc === "system") loc = undefined;
 
@@ -48,8 +48,16 @@ const formatDisplayTime = (minutes, locale) => {
     date.setHours(h);
     date.setMinutes(m);
     
+    let options = { hour: 'numeric', minute: 'numeric' };
+    
+    if (timeFormat === "12h") {
+        options.hour12 = true;
+    } else if (timeFormat === "24h") {
+        options.hour12 = false;
+    }
+
     try {
-        return new Intl.DateTimeFormat(loc, { hour: 'numeric', minute: 'numeric' }).format(date);
+        return new Intl.DateTimeFormat(loc, options).format(date);
     } catch (e) {
         return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`;
     }
@@ -353,10 +361,10 @@ export default class TimeScheduleGraph extends PureComponent {
                     <line 
                         x1={this.state.currentTime / 1440 * width} y1={0} 
                         x2={this.state.currentTime / 1440 * width} y2={height} 
-                        stroke="var(--text-color)" 
+                        stroke="var(--system-accent-color)" 
                         strokeWidth="2" 
                         strokeDasharray="5,5" 
-                        style={{ pointerEvents: "none", opacity: 0.5 }} 
+                        style={{ pointerEvents: "none", opacity: 1 }} 
                     />
 
                     {/* Play Cursor */}
@@ -393,17 +401,17 @@ export default class TimeScheduleGraph extends PureComponent {
                         <g transform={`translate(${this.state.draggingData.x / 1440 * width}, ${(100 - this.state.draggingData.y) / 100 * height})`}>
                             <rect x="-40" y="-35" width="80" height="25" fill="var(--page-background)" stroke="var(--system-accent-color)" rx="4" />
                             <text x="0" y="-18" textAnchor="middle" fill="var(--text-color)" fontSize="14" dy=".3em">
-                                {formatDisplayTime(this.state.draggingData.x, this.props.locale)} • {Math.round(this.state.draggingData.y)}%
+                                {formatDisplayTime(this.state.draggingData.x, this.props.locale, this.props.timeFormat)} • {Math.round(this.state.draggingData.y)}%
                             </text>
                         </g>
                     )}
 
                     {/* X Axis Labels */}
-                    <text x={0} y={height + 15} textAnchor="start">{formatDisplayTime(0, this.props.locale)}</text>
-                    <text x={width/4} y={height + 15} textAnchor="middle">{formatDisplayTime(360, this.props.locale)}</text>
-                    <text x={width/2} y={height + 15} textAnchor="middle">{formatDisplayTime(720, this.props.locale)}</text>
-                    <text x={width*0.75} y={height + 15} textAnchor="middle">{formatDisplayTime(1080, this.props.locale)}</text>
-                    <text x={width} y={height + 15} textAnchor="end">{formatDisplayTime(0, this.props.locale)}</text>
+                    <text x={0} y={height + 15} textAnchor="start">{formatDisplayTime(0, this.props.locale, this.props.timeFormat)}</text>
+                    <text x={width/4} y={height + 15} textAnchor="middle">{formatDisplayTime(360, this.props.locale, this.props.timeFormat)}</text>
+                    <text x={width/2} y={height + 15} textAnchor="middle">{formatDisplayTime(720, this.props.locale, this.props.timeFormat)}</text>
+                    <text x={width*0.75} y={height + 15} textAnchor="middle">{formatDisplayTime(1080, this.props.locale, this.props.timeFormat)}</text>
+                    <text x={width} y={height + 15} textAnchor="end">{formatDisplayTime(0, this.props.locale, this.props.timeFormat)}</text>
                 </svg>
             </div>
         );

@@ -669,7 +669,7 @@ export default class SettingsWindow extends PureComponent {
 
             return this.state.adjustmentTimes.map((time, index) => {
                 let timeElem = (
-                    <input type="time" lang={this.getTimeInputLang()} min="00:00" max="23:59" onChange={(e) => {
+                    <input type="time" key={`${index}-${this.state.timeFormat}`} lang={this.getTimeInputLang()} min="00:00" max="23:59" onChange={(e) => {
                         this.setAdjustmentTimeValue(index, e.target.value)
                     }} value={time.time}></input>
                 )
